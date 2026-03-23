@@ -1,0 +1,72 @@
+Metadata-Version: 2.4
+Name: switching-sde-release
+Version: 0.1.0
+Summary: Reproducible switching SDE release repository with legacy artifact compatibility
+Author: Switching SDE Team
+License: MIT
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.23
+Requires-Dist: matplotlib>=3.6
+Requires-Dist: PyYAML>=6.0
+Dynamic: license-file
+Dynamic: requires-python
+
+# switching-sde-release
+
+A clean, publishable repository for switching SDE experiments, with strict compatibility to legacy results.
+
+## Design goals
+
+- New independent repository (legacy repo remains untouched).
+- Reuse existing checkpoints/reports without retraining.
+- Unified CLI for indexing artifacts, evaluation, visualization, benchmarks, and reports.
+- Two execution policies:
+  - `live`: run model evaluation/visualization when checkpoint + dataset exist.
+  - `frozen`: regenerate tables/figures from existing JSON/CSV outputs.
+
+## Quick start
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+pip install -e .
+
+export LEGACY_PENN_ROOT=/path/to/PENN
+switching-sde artifacts index --legacy-root "$LEGACY_PENN_ROOT"
+switching-sde artifacts link --legacy-root "$LEGACY_PENN_ROOT"
+
+switching-sde benchmark --suite paper_full --mode frozen
+switching-sde report --suite paper_full
+```
+
+If your environment has an old `pip` that cannot do editable installs, use:
+
+```bash
+pip install .
+```
+
+## Main commands
+
+- `switching-sde artifacts index --legacy-root <path>`
+- `switching-sde artifacts link --legacy-root <path>`
+- `switching-sde eval --experiment <name> --mode live|frozen|auto`
+- `switching-sde viz --experiment <name> --mode live|frozen|auto`
+- `switching-sde benchmark --suite paper_full|p5|p6 --mode live|frozen|auto`
+- `switching-sde report --suite paper_full|p5|p6`
+
+## Notes
+
+- This repository is frozen-result-first. If a dataset/checkpoint is missing locally, `auto` mode falls back to `frozen` mode.
+- Output is always written inside this repository's `reports/` directory.
+- `live` mode requires the legacy runtime dependencies (e.g., `numpy`, `torch`) in the current Python environment.
+- If `--legacy-root` is omitted, the CLI tries `LEGACY_PENN_ROOT`, then sibling path `../PENN`.
+
+## Validation Commands
+
+```bash
+PYTHONPATH=src python -m unittest discover -s tests -p 'test_*.py'
+PYTHONPATH=src python -m switching_sde.cli.main --help
+```

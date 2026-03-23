@@ -1,0 +1,10 @@
+experiment_name: id_nonlinear
+suite: p6
+drift_family: duffing
+task_mode: changepoint
+inference_mode: posterior
+backbone: lstm
+data_version: fixed_v5_nl_id
+scenario: ID_NL
+primary_method: Ours_lstm_A0
+legacy_report_root: reports/p6_nonlinear_full_v3

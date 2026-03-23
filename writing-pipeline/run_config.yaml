@@ -1,0 +1,236 @@
+version: 1
+
+project:
+  root: "."
+  search_paths:
+    - "."
+    - "../PENN"
+  likely_result_dirs:
+    - "results"
+    - "outputs"
+    - "logs"
+    - "runs"
+    - "checkpoints"
+    - "figures"
+    - "tables"
+    - "reports"
+    - "data"
+    - "notebooks"
+  ignore_paths:
+    - ".git"
+    - ".hg"
+    - ".svn"
+    - ".venv"
+    - "venv"
+    - "__pycache__"
+    - "node_modules"
+    - ".mypy_cache"
+    - ".pytest_cache"
+    - ".idea"
+    - ".DS_Store"
+
+autonomy:
+  run_without_routine_confirmation: true
+  ask_user_only_on_hard_block: true
+  allow_conservative_wording_for_unknowns: true
+  forbid_invention: true
+  keep_revision_loop_running_until_gate_or_max_rounds: true
+
+runtime:
+  stages_manifest: "writing-pipeline/runtime/stages.yaml"
+  runs_dir: "writing-pipeline/runs"
+  state_filename: "run_state.yaml"
+  events_filename: "events.jsonl"
+  briefs_dirname: "briefs"
+  validation_report_filename: "validation_report.md"
+  allow_parallel_stage_claims: false
+  codex_subagents:
+    generate_stage_briefs: true
+    require_write_scope_isolation: true
+    require_stage_claim_before_completion: true
+    require_completion_notes: true
+
+deliverables:
+  build_report: true
+  build_paper_sections: true
+  report_output: "writing-pipeline/outputs/report.md"
+  paper_output: "writing-pipeline/outputs/paper_sections.md"
+  report_zh_output: "writing-pipeline/outputs/report.zh.md"
+  paper_zh_output: "writing-pipeline/outputs/paper_sections.zh.md"
+  report_html_output: "writing-pipeline/outputs/report.html"
+  paper_html_output: "writing-pipeline/outputs/paper.html"
+  report_zh_html_output: "writing-pipeline/outputs/report.zh.html"
+  paper_zh_html_output: "writing-pipeline/outputs/paper.zh.html"
+  figure_manifest_output: "writing-pipeline/outputs/figure_manifest.md"
+  dossier_output: "writing-pipeline/artifacts/project_dossier.md"
+  evidence_output: "writing-pipeline/artifacts/evidence_map.yaml"
+  final_readiness_output: "writing-pipeline/artifacts/final_readiness.md"
+  documents:
+    - id: "report_en"
+      kind: "report"
+      language: "English"
+      markdown_output: "writing-pipeline/outputs/report.md"
+      html_output: "writing-pipeline/outputs/report.html"
+      required: true
+      canonical: true
+    - id: "paper_en"
+      kind: "paper"
+      language: "English"
+      markdown_output: "writing-pipeline/outputs/paper_sections.md"
+      html_output: "writing-pipeline/outputs/paper.html"
+      required: true
+      canonical: true
+    - id: "report_zh"
+      kind: "report"
+      language: "Chinese"
+      markdown_output: "writing-pipeline/outputs/report.zh.md"
+      html_output: "writing-pipeline/outputs/report.zh.html"
+      required: true
+      canonical: false
+      translation_of: "report_en"
+    - id: "paper_zh"
+      kind: "paper"
+      language: "Chinese"
+      markdown_output: "writing-pipeline/outputs/paper_sections.zh.md"
+      html_output: "writing-pipeline/outputs/paper.zh.html"
+      required: true
+      canonical: false
+      translation_of: "paper_en"
+
+rendering:
+  markdown_is_source_of_truth: true
+  html:
+    required: true
+    self_contained: true
+    embed_local_images: true
+    include_toc: true
+    theme_css: "writing-pipeline/rendering/default_theme.css"
+  math:
+    enabled: true
+    engine: "mathjax"
+    bundle_js: "writing-pipeline/rendering/vendor/mathjax/tex-svg.js"
+    cdn_url: "https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"
+  pdf:
+    build_if_toolchain_available: true
+    require_when_toolchain_available: false
+
+writing:
+  report_language: "English"
+  paper_language: "English"
+  languages:
+    canonical_source_language: "English"
+    required_output_languages:
+      - "English"
+      - "Chinese"
+    translation_order:
+      - "English"
+      - "Chinese"
+    require_bilingual_outputs: true
+    require_translation_after_primary_freeze: true
+    translation_policy:
+      preserve_claim_strength: true
+      preserve_numbers_and_units: true
+      preserve_math_notation: true
+      preserve_figure_and_table_alignment: true
+      allow_natural_target_language_rhetoric: true
+  target_reader: "research reader unfamiliar with the codebase"
+  style_profile: "ieee"
+  section_scope:
+    experiment_section: true
+    introduction_section: true
+    method_section: true
+    notation_section: true
+    problem_formalization_section: true
+  terminology:
+    require_domain_terms_over_code_names: true
+    require_mathematical_notation_for_core_objects: true
+    require_terminology_map: true
+    forbid_raw_code_identifiers_in_narrative: true
+    allow_raw_identifiers_only_in_monospace_implementation_notes: true
+  self_containment:
+    require_reader_independence: true
+    forbid_repository_relative_narrative: true
+    require_first_use_definition_for_terms: true
+    require_scenario_semantics_not_just_labels: true
+    require_problem_method_experiment_to_form_one_document: true
+  visuals:
+    require_visual_rich_outputs: true
+    require_figure_table_plan: true
+    prefer_existing_repo_figures: true
+    output_assets_dir: "writing-pipeline/outputs/assets"
+    require_cited_figures_copied_to_output: true
+    require_figure_manifest_output: true
+    min_report_visuals: 4
+    min_paper_visuals: 4
+    require_caption_and_interpretation: true
+    require_visual_reference_in_text: true
+  report_requirements:
+    include_objective: true
+    include_results: true
+    include_method: true
+    include_detours_and_challenges: true
+    include_baselines: true
+    include_tests: true
+    include_environment: true
+    include_hyperparameters: true
+    include_architecture: true
+  paragraph_targets:
+    report_words_per_paragraph: 120
+    paper_words_per_paragraph: 130
+    enforce_paragraph_level_plan: true
+  section_paragraph_budgets:
+    experiment_section:
+      target_paragraphs: 8
+    introduction_section:
+      target_paragraphs: 5
+    method_section:
+      target_paragraphs: 5
+    notation_section:
+      target_paragraphs: 3
+    problem_formalization_section:
+      target_paragraphs: 4
+
+human_guidance:
+  emphasize_contributions: []
+  emphasize_problems_solved: []
+  avoid_claims: []
+  preferred_terms: []
+  banned_terms: []
+
+quality_gates:
+  require_evidence_for_strong_claims: true
+  require_outline_compliance: true
+  require_style_compliance: true
+  require_terminology_compliance: true
+  require_visual_integration: true
+  require_output_assets_for_cited_figures: true
+  require_figure_manifest_output: true
+  require_rendered_html_outputs: true
+  require_self_contained_human_readable_outputs: true
+  require_bilingual_outputs: true
+  require_cross_language_consistency_review: true
+  require_translation_preserves_numbers_and_math: true
+  require_method_section: true
+  require_self_contained_draft: true
+  require_first_use_definitions: true
+  require_scenario_definition_clarity: true
+  require_cross_section_deduplication: true
+  require_report_before_paper: true
+  require_report_consistency_for_paper: true
+  require_runtime_state_tracking: true
+  require_machine_readable_stage_manifest: true
+  require_validation_report: true
+
+review:
+  max_revision_rounds: 3
+  require_advisor_review: true
+  require_peer_review: true
+  final_gate:
+    max_open_high_severity_issues: 0
+    max_open_medium_severity_issues: 2
+    consecutive_rounds_without_new_major_issues: 2
+
+artifacts:
+  track_assumptions: true
+  track_rejected_review_comments: true
+  track_unresolved_issues: true

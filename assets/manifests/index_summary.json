@@ -1,0 +1,23 @@
+{
+  "legacy_root": "/Users/lishuaiyu/Documents/Playground/PENN",
+  "num_records": 337,
+  "kind_counts": {
+    "table": 37,
+    "json": 62,
+    "eval_json": 93,
+    "figure": 85,
+    "notebook": 5,
+    "checkpoint": 52,
+    "dataset": 3
+  },
+  "status_counts": {
+    "ready": 244,
+    "missing_optional": 93
+  },
+  "dataset_status_counts": {
+    "ready": 3,
+    "missing_optional": 9
+  },
+  "artifact_lock": "/Users/lishuaiyu/Documents/Playground/switching-sde-release/assets/manifests/artifacts.lock.json",
+  "dataset_lock": "/Users/lishuaiyu/Documents/Playground/switching-sde-release/assets/manifests/datasets.lock.json"
+}

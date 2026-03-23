@@ -1,0 +1,10 @@
+experiment_name: id_linear
+suite: paper_full
+drift_family: ou
+task_mode: changepoint
+inference_mode: posterior
+backbone: lstm
+data_version: fixed_v2
+scenario: ID_linear
+primary_method: switching_ou_transformer_dual_ce10
+legacy_report_root: reports/paper_full

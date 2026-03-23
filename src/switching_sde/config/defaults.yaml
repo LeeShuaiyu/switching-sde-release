@@ -1,0 +1,11 @@
+artifact_policy: auto
+legacy_root: ""
+output_root: ""
+drift_family: ou
+task_mode: changepoint
+inference_mode: posterior
+backbone: lstm
+data_version: fixed_v2
+split_hash: ""
+suite: paper_full
+experiment_name: id_linear

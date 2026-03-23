@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "switching-sde-release"
+version = "0.1.0"
+description = "Reproducible switching SDE release repository with legacy artifact compatibility"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "Switching SDE Team" }]
+license = { text = "MIT" }
+dependencies = [
+  "numpy>=1.23",
+  "matplotlib>=3.6",
+  "PyYAML>=6.0"
+]
+
+[project.scripts]
+switching-sde = "switching_sde.cli.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+switching_sde = [
+  "config/*.yaml",
+  "config/experiments/*.yaml"
+]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]

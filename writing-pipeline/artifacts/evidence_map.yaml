@@ -1,0 +1,108 @@
+claims:
+  - claim_id: C01
+    statement: "The released switching-SDE subsystem targets a single latent changepoint and returns a discrete posterior over admissible switch indices, together with MAP, top-3 modes, and a 90% interval."
+    status: supported
+    source_type: readme_and_posterior_code
+    source_path: "../PENN/README.md; ../PENN/switching/posterior_utils.py; ../PENN/switching/config_switching_ou.py"
+    locator: "README lines 36-43; posterior_utils lines 6-41, 171-213, 226-260; config lines 29-31, 79-80"
+    figure_or_table_id: "Table 1"
+    notes: "Supports the problem formulation and metric definitions in the report and paper."
+
+  - claim_id: C02
+    statement: "The admissible switching indices are restricted to the interior of the trajectory by the fixed 0.2-0.8 switch window and a minimum segment length of 16."
+    status: supported
+    source_type: config_and_candidate_mask_code
+    source_path: "../PENN/switching/config_switching_ou.py; ../PENN/switching/posterior_utils.py"
+    locator: "config lines 29-31, 79-80; posterior_utils lines 6-41"
+    figure_or_table_id: "Table 1"
+    notes: "Matches the manuscript's candidate-set notation and the interior-switch assumption."
+
+  - claim_id: C03
+    statement: "The main deep posterior family uses LSTM or Transformer backbones with a dual-head configuration and the split_dual posterior head."
+    status: supported
+    source_type: config_and_readme
+    source_path: "../PENN/README.md; ../PENN/switching/config_switching_ou.py"
+    locator: "README lines 34-43; config lines 72-78, 81-98, 125-126"
+    figure_or_table_id: null
+    notes: "Use field-standard language in prose rather than raw model ids."
+
+  - claim_id: C04
+    statement: "The benchmark protocol uses fixed_v2 splits with 20,000 train, 2,000 eval, and 2,000 test trajectories, 20 epochs, AdamW, learning rate 1e-3, weight decay 1e-4, batch size 128, gradient clipping 1.0, temperature scaling on the eval split, and three seeds."
+    status: supported
+    source_type: config_and_benchmark_script
+    source_path: "../PENN/README.md; ../PENN/switching/config_switching_ou.py; ../PENN/switching/run_paper_benchmarks.py"
+    locator: "README lines 47-55, 111-118, 130-163; config lines 63-65, 130-146, 161-163; run_paper_benchmarks lines 28-39, 63-176"
+    figure_or_table_id: null
+    notes: "This backs the experimental protocol section and the collapse thresholds."
+
+  - claim_id: C05
+    statement: "The paper benchmark matrix compares statistical baselines, model-based baselines, deterministic deep baselines, probabilistic deep baselines, and the proposed posterior model, plus transformer ablations."
+    status: supported
+    source_type: benchmark_script_and_tables
+    source_path: "../PENN/switching/run_paper_benchmarks.py; ../PENN/reports/paper_full/benchmark_main_table.csv; ../PENN/reports/paper_full/benchmark_appendix_backbone_table.csv; ../PENN/reports/paper_full/ablation_table.csv"
+    locator: "run_paper_benchmarks._method_matrix; table rows for S1_cusum_lr, S2_bocpd_offline, M1_switching_hmm, M2_plugin_split, D1-D4, Ours_transformer_hard, Ours_lstm_hard, A0-A3"
+    figure_or_table_id: "Table 2"
+    notes: "This is the comparison frame for the results section."
+
+  - claim_id: C06
+    statement: "On the reference linear benchmark, the transformer posterior model improves over deterministic regression and avoids collapse."
+    status: supported
+    source_type: result_table
+    source_path: "../PENN/reports/paper_full/benchmark_main_table.csv"
+    locator: "rows model_id=D2_transformer_regression and model_id=Ours_transformer_hard"
+    figure_or_table_id: "Table 2"
+    notes: "D2: MAE 2.1270, F1 0.0815, collapse 1.0; Ours_transformer_hard: MAE 1.6383, F1 0.3015, collapse 0.0."
+
+  - claim_id: C07
+    statement: "In the appendix backbone comparison, the LSTM posterior model is stronger than the transformer posterior model on the nominal linear benchmark."
+    status: supported
+    source_type: appendix_table
+    source_path: "../PENN/reports/paper_full/benchmark_appendix_backbone_table.csv"
+    locator: "rows model_id=Ours_lstm_hard and model_id=Ours_transformer_hard"
+    figure_or_table_id: "Table 2"
+    notes: "Ours_lstm_hard: MAE 0.6227, F1 0.6943, collapse 0.0; Ours_transformer_hard: MAE 1.6383, F1 0.3015, collapse 0.0."
+
+  - claim_id: C08
+    statement: "The linear stress suite shows a mild success case at S1 but not uniform OOD robustness: the posterior model degrades on S2 and S3, and CUSUM is better in MAE on those harder shifts."
+    status: supported
+    source_type: stress_table_and_degradation_table
+    source_path: "../PENN/reports/p5/benchmark_ood_full_table.csv; ../PENN/reports/p5/degradation_table.csv"
+    locator: "rows model_id=Ours_lstm_A0 and model_id=Ours_transformer_A0 across scenarios S1, S2, S3; degradation rows for Ours_transformer_A0"
+    figure_or_table_id: "Table 3"
+    notes: "S1: Ours_lstm_A0 MAE 0.8854, F1 0.5395, collapse 0.0. S2: Ours_transformer_A0 MAE 3.1398, collapse 1.0. S3: Ours_transformer_A0 MAE 2.7924, collapse_count 2."
+
+  - claim_id: C09
+    statement: "The nonlinear benchmark is more favorable than the linear stress suite, but OOD-NL1 still triggers the collapse diagnostic even when point metrics remain strong."
+    status: supported
+    source_type: nonlinear_table
+    source_path: "../PENN/reports/p6_nonlinear_full_v3/benchmark_id_nl_deep_table.csv; ../PENN/reports/p6_nonlinear_full_v3/benchmark_ood_nl_full_table.csv"
+    locator: "rows model_id=Ours_lstm_A0 and model_id=Ours_transformer_A0 for ID_NL and OOD_NL1/OOD_NL2/OOD_NL3"
+    figure_or_table_id: "Table 4"
+    notes: "ID_NL: LSTM 0.3484 MAE / 0.8367 F1; Transformer 0.4991 / 0.7573. OOD_NL1 collapse_rate 1.0 for both posterior backbones."
+
+  - claim_id: C10
+    statement: "The transformer ablation study supports a restrained final recipe: hard posterior supervision is best, distillation is slightly weaker, and segment-statistics augmentation is unstable."
+    status: supported
+    source_type: ablation_and_seed_stability_tables
+    source_path: "../PENN/reports/paper_full/ablation_table.csv; ../PENN/reports/paper_full/seed_stability_table.csv"
+    locator: "rows A0_ours_hard, A1_ours_distill, A2_ours_harddrop, A3_ours_segstats"
+    figure_or_table_id: "Table 5"
+    notes: "A3 collapses in 2 of 3 seeds; A0 is the strongest transformer ablation."
+
+  - claim_id: C11
+    statement: "The linear and nonlinear scenario labels correspond to explicit semantic shifts: heavy tails plus impulse corruption, low separability, and irregular observation."
+    status: supported
+    source_type: stress_profile_code
+    source_path: "../PENN/switching/stress_profiles.py; ../PENN/switching/stress_profiles_nonlinear.py"
+    locator: "stress_profiles.py lines 16-79; stress_profiles_nonlinear.py lines 16-106"
+    figure_or_table_id: "Table 1"
+    notes: "This backs the self-contained scenario explanations in the manuscript."
+
+  - claim_id: C12
+    statement: "The repository contains final figure assets for the reference, linear-stress, and nonlinear benchmark suites, so visually integrated report and paper outputs are feasible."
+    status: supported
+    source_type: checked_in_visual_assets
+    source_path: "../PENN/reports/paper_full/figures/; ../PENN/reports/p5/figures/; ../PENN/reports/p6_nonlinear_full_v3/figures/"
+    locator: "figure folders in each final report directory"
+    figure_or_table_id: "Figures 1-6"
+    notes: "This justifies the figure-rich output requirement."

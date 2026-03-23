@@ -1,0 +1,283 @@
+version: 1
+
+stages:
+  - id: stage_0_repository_intake
+    label: Repository Intake
+    owners: [orchestrator]
+    depends_on: []
+    subagent_mode: serial
+    read_set:
+      - writing-pipeline/START_HERE.md
+      - writing-pipeline/run_config.yaml
+      - writing-pipeline/human_notes.md
+      - writing-pipeline/workflow.md
+    write_scope:
+      - writing-pipeline/artifacts/project_dossier.md
+    outputs:
+      - writing-pipeline/artifacts/project_dossier.md
+    purpose: Map the repository structure, likely evidence sources, and missing materials before any claims are drafted.
+    completion_checks:
+      - project_dossier.md exists and includes repository intake notes.
+
+  - id: stage_1_project_dossier
+    label: Project Dossier Extraction
+    owners: [dossier_extractor, orchestrator]
+    depends_on: [stage_0_repository_intake]
+    subagent_mode: bounded_research
+    read_set:
+      - writing-pipeline/artifacts/project_dossier.md
+      - writing-pipeline/run_config.yaml
+      - writing-pipeline/workflow.md
+    write_scope:
+      - writing-pipeline/artifacts/project_dossier.md
+    outputs:
+      - writing-pipeline/artifacts/project_dossier.md
+    purpose: Reconstruct the project objective, method, results, provenance, and open uncertainties.
+    completion_checks:
+      - project_dossier.md covers all required dossier sections.
+
+  - id: stage_2_evidence_map
+    label: Evidence Map
+    owners: [evidence_mapper, fact_consistency_reviewer]
+    depends_on: [stage_1_project_dossier]
+    subagent_mode: bounded_research
+    read_set:
+      - writing-pipeline/artifacts/project_dossier.md
+      - writing-pipeline/run_config.yaml
+    write_scope:
+      - writing-pipeline/artifacts/evidence_map.yaml
+    outputs:
+      - writing-pipeline/artifacts/evidence_map.yaml
+    purpose: Bind every strong claim to repository evidence before drafting begins.
+    completion_checks:
+      - evidence_map.yaml exists and records supported or unsupported status for strong claims.
+
+  - id: stage_2a_terminology_map
+    label: Terminology And Notation Map
+    owners: [terminology_mapper, global_editor]
+    depends_on: [stage_2_evidence_map]
+    subagent_mode: bounded_research
+    read_set:
+      - writing-pipeline/artifacts/project_dossier.md
+      - writing-pipeline/artifacts/evidence_map.yaml
+    write_scope:
+      - writing-pipeline/artifacts/terminology_map.md
+    outputs:
+      - writing-pipeline/artifacts/terminology_map.md
+    purpose: Replace code-facing names with domain-standard terms or mathematical notation.
+    completion_checks:
+      - terminology_map.md exists and resolves recurring private identifiers.
+
+  - id: stage_2b_figure_table_plan
+    label: Figure And Table Plan
+    owners: [figure_curator, outliner]
+    depends_on: [stage_2a_terminology_map]
+    subagent_mode: bounded_research
+    read_set:
+      - writing-pipeline/artifacts/evidence_map.yaml
+      - writing-pipeline/artifacts/terminology_map.md
+    write_scope:
+      - writing-pipeline/artifacts/figure_table_plan.md
+    outputs:
+      - writing-pipeline/artifacts/figure_table_plan.md
+    purpose: Select evidence-bearing visuals and normalize them into output assets.
+    completion_checks:
+      - figure_table_plan.md exists and ties each selected visual to a claim.
+
+  - id: stage_3_report_outline
+    label: Report Outline
+    owners: [outliner, orchestrator]
+    depends_on: [stage_2b_figure_table_plan]
+    subagent_mode: drafting
+    read_set:
+      - writing-pipeline/artifacts/project_dossier.md
+      - writing-pipeline/artifacts/evidence_map.yaml
+      - writing-pipeline/artifacts/terminology_map.md
+      - writing-pipeline/artifacts/figure_table_plan.md
+    write_scope:
+      - writing-pipeline/artifacts/report_outline.md
+    outputs:
+      - writing-pipeline/artifacts/report_outline.md
+    purpose: Convert evidence and terminology decisions into a non-overlapping report structure.
+    completion_checks:
+      - report_outline.md exists and covers required report topics.
+
+  - id: stage_4_report_paragraph_plan
+    label: Report Paragraph Plan
+    owners: [outliner, global_editor]
+    depends_on: [stage_3_report_outline]
+    subagent_mode: drafting
+    read_set:
+      - writing-pipeline/artifacts/report_outline.md
+      - writing-pipeline/artifacts/evidence_map.yaml
+      - writing-pipeline/artifacts/figure_table_plan.md
+    write_scope:
+      - writing-pipeline/artifacts/report_paragraph_plan.md
+    outputs:
+      - writing-pipeline/artifacts/report_paragraph_plan.md
+    purpose: Turn the report outline into paragraph-level assignments with evidence and visual anchors.
+    completion_checks:
+      - report_paragraph_plan.md exists and every paragraph has an evidence anchor.
+
+  - id: stage_5_report_drafting
+    label: Report Drafting
+    owners: [paragraph_writer, local_reviewer]
+    depends_on: [stage_4_report_paragraph_plan]
+    subagent_mode: drafting
+    read_set:
+      - writing-pipeline/artifacts/report_paragraph_plan.md
+      - writing-pipeline/artifacts/terminology_map.md
+      - writing-pipeline/artifacts/figure_table_plan.md
+    write_scope:
+      - writing-pipeline/outputs/report.md
+    outputs:
+      - writing-pipeline/outputs/report.md
+    purpose: Draft the canonical-language technical report from the paragraph plan.
+    completion_checks:
+      - report.md exists and embeds planned visuals from outputs/assets.
+
+  - id: stage_6_report_review_freeze
+    label: Report Review And Freeze
+    owners: [local_reviewer, logic_reviewer, outline_compliance_reviewer, fact_consistency_reviewer, global_editor]
+    depends_on: [stage_5_report_drafting]
+    subagent_mode: review_bundle
+    read_set:
+      - writing-pipeline/outputs/report.md
+      - writing-pipeline/artifacts/evidence_map.yaml
+      - writing-pipeline/artifacts/terminology_map.md
+    write_scope:
+      - writing-pipeline/artifacts/report_review_log.md
+      - writing-pipeline/outputs/report.md
+    outputs:
+      - writing-pipeline/artifacts/report_review_log.md
+      - writing-pipeline/outputs/report.md
+    purpose: Review the report for correctness, clarity, self-containment, and figure integration before freezing it.
+    completion_checks:
+      - report_review_log.md exists.
+      - report.md remains the canonical source for paper drafting.
+
+  - id: stage_6a_report_translation
+    label: Report Translation And Bilingual Review
+    owners: [translator, bilingual_consistency_reviewer, global_editor]
+    depends_on: [stage_6_report_review_freeze]
+    subagent_mode: translation
+    read_set:
+      - writing-pipeline/outputs/report.md
+      - writing-pipeline/artifacts/report_review_log.md
+      - writing-pipeline/artifacts/terminology_map.md
+    write_scope:
+      - writing-pipeline/outputs/report.zh.md
+      - writing-pipeline/artifacts/report_review_log.md
+    outputs:
+      - writing-pipeline/outputs/report.zh.md
+    purpose: Translate the frozen report and verify cross-language semantic consistency.
+    completion_checks:
+      - report.zh.md exists and stays aligned with report.md.
+
+  - id: stage_7_paper_outline
+    label: Paper Outline
+    owners: [outliner, advisor]
+    depends_on: [stage_6a_report_translation]
+    subagent_mode: drafting
+    read_set:
+      - writing-pipeline/outputs/report.md
+      - writing-pipeline/artifacts/terminology_map.md
+      - writing-pipeline/artifacts/figure_table_plan.md
+    write_scope:
+      - writing-pipeline/artifacts/paper_outline.md
+    outputs:
+      - writing-pipeline/artifacts/paper_outline.md
+    purpose: Define the paper structure from the frozen report and configured scope.
+    completion_checks:
+      - paper_outline.md exists and matches the enabled paper scope.
+
+  - id: stage_8_paper_drafting
+    label: Paper Paragraph Plan And Drafting
+    owners: [outliner, paragraph_writer, global_editor]
+    depends_on: [stage_7_paper_outline]
+    subagent_mode: drafting
+    read_set:
+      - writing-pipeline/artifacts/paper_outline.md
+      - writing-pipeline/outputs/report.md
+      - writing-pipeline/artifacts/figure_table_plan.md
+    write_scope:
+      - writing-pipeline/artifacts/paper_paragraph_plan.md
+      - writing-pipeline/outputs/paper_sections.md
+    outputs:
+      - writing-pipeline/artifacts/paper_paragraph_plan.md
+      - writing-pipeline/outputs/paper_sections.md
+    purpose: Draft the canonical-language paper sections from the frozen report.
+    completion_checks:
+      - paper_paragraph_plan.md exists.
+      - paper_sections.md exists and forms a coherent manuscript fragment.
+
+  - id: stage_9_paper_review_cycle
+    label: Paper Review Cycle
+    owners: [local_reviewer, logic_reviewer, outline_compliance_reviewer, fact_consistency_reviewer, advisor, reviewer, revision_arbiter, global_editor]
+    depends_on: [stage_8_paper_drafting]
+    subagent_mode: parallel_review
+    read_set:
+      - writing-pipeline/outputs/paper_sections.md
+      - writing-pipeline/outputs/report.md
+      - writing-pipeline/artifacts/evidence_map.yaml
+    write_scope:
+      - writing-pipeline/artifacts/review_comments.md
+      - writing-pipeline/artifacts/revision_decisions.md
+      - writing-pipeline/outputs/paper_sections.md
+    outputs:
+      - writing-pipeline/artifacts/review_comments.md
+      - writing-pipeline/artifacts/revision_decisions.md
+      - writing-pipeline/outputs/paper_sections.md
+    purpose: Run review, arbitration, and revision until the configured gate is ready to stop.
+    completion_checks:
+      - review_comments.md exists.
+      - revision_decisions.md exists.
+      - paper_sections.md contains adopted revisions.
+
+  - id: stage_9a_paper_translation
+    label: Paper Translation And Bilingual Review
+    owners: [translator, bilingual_consistency_reviewer, global_editor]
+    depends_on: [stage_9_paper_review_cycle]
+    subagent_mode: translation
+    read_set:
+      - writing-pipeline/outputs/paper_sections.md
+      - writing-pipeline/artifacts/review_comments.md
+      - writing-pipeline/artifacts/terminology_map.md
+    write_scope:
+      - writing-pipeline/outputs/paper_sections.zh.md
+      - writing-pipeline/artifacts/review_comments.md
+    outputs:
+      - writing-pipeline/outputs/paper_sections.zh.md
+    purpose: Translate the frozen paper draft and verify cross-language semantic consistency.
+    completion_checks:
+      - paper_sections.zh.md exists and stays aligned with paper_sections.md.
+
+  - id: stage_10_finalization
+    label: Finalization
+    owners: [orchestrator]
+    depends_on: [stage_9a_paper_translation]
+    subagent_mode: serial
+    read_set:
+      - writing-pipeline/outputs/report.md
+      - writing-pipeline/outputs/report.zh.md
+      - writing-pipeline/outputs/paper_sections.md
+      - writing-pipeline/outputs/paper_sections.zh.md
+    write_scope:
+      - writing-pipeline/artifacts/final_readiness.md
+      - writing-pipeline/outputs/figure_manifest.md
+      - writing-pipeline/outputs/report.html
+      - writing-pipeline/outputs/report.zh.html
+      - writing-pipeline/outputs/paper.html
+      - writing-pipeline/outputs/paper.zh.html
+    outputs:
+      - writing-pipeline/artifacts/final_readiness.md
+      - writing-pipeline/outputs/figure_manifest.md
+      - writing-pipeline/outputs/report.html
+      - writing-pipeline/outputs/report.zh.html
+      - writing-pipeline/outputs/paper.html
+      - writing-pipeline/outputs/paper.zh.html
+    purpose: Render final deliverables, write the readiness memo, and leave an auditable end state.
+    completion_checks:
+      - final_readiness.md exists.
+      - figure_manifest.md exists.
+      - all configured HTML outputs exist.

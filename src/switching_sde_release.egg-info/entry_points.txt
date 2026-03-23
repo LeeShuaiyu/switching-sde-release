@@ -1,0 +1,2 @@
+[console_scripts]
+switching-sde = switching_sde.cli.main:main
