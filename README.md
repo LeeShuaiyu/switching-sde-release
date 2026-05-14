@@ -1,197 +1,170 @@
-# switching-sde-release
+# Switching-Time Posterior Inference for Regime-Switching Stochastic Dynamics
 
-A publishable release repository for switching stochastic differential equation experiments.
+This repository is the public code release for the manuscript
+**"Switching-Time Posterior Inference for Regime-Switching Stochastic Dynamics"**.
 
-This repository has two complementary roles:
+The project studies offline single-switch inference for stochastic dynamical
+systems. Given one observed trajectory, the goal is to infer a distribution over
+candidate switching indices rather than only a point estimate. The main method
+is the **Candidate Split Posterior Model (CSPM)**: it encodes the full
+trajectory, summarizes the two segments induced by each candidate split, scores
+the complete left-right partition, and normalizes the scores into a discrete
+candidate-index posterior.
 
-1. A reproducible release layer over legacy experiment artifacts from `PENN`
-2. A Codex-subagent-ready writing workflow for producing bilingual, figure-integrated reports and paper drafts
+![Candidate Split Posterior Model overview](docs/figures/cspm_method_overview.png)
 
-## What Is In This Repository
+## Repository Status
 
-### 1. Release and compatibility layer
+This is a code and reproducibility repository for the paper. It is not the
+manuscript source repository.
 
-The Python package under `src/` exposes the `switching-sde` CLI for:
+The public release contains:
 
-- indexing legacy artifacts
-- linking them into this repository
-- running evaluation in `live`, `frozen`, or `auto` mode
-- rebuilding benchmark tables and figures
-- generating release reports and bundles
+- a Python package and command-line interface, `switching-sde`;
+- wrappers for the switching OU and switching Duffing experiment families;
+- artifact indexing, frozen evaluation, visualization, and report-generation
+  utilities;
+- checked-in release figures and writing-pipeline outputs used during paper
+  development;
+- tests for the release layer and artifact-resolution logic.
 
-The design goal is to keep the legacy experiment repository untouched while making the final artifacts reproducible and publishable from a cleaner repository.
+Large legacy experiment artifacts, datasets, and checkpoints are not committed
+to this repository. Full live reruns require access to a local legacy artifact
+tree, referred to below as `LEGACY_PENN_ROOT`. The repository can still be
+installed, inspected, and tested without that artifact tree.
 
-### 2. Writing pipeline
+## Paper Figures
 
-The `writing-pipeline/` folder is a structured authoring workflow for turning the codebase and its checked-in results into:
+Representative switching trajectories:
 
-- a self-contained technical report
-- a paper-style manuscript fragment
-- matched English and Chinese versions
-- rendered HTML outputs with embedded figures
-- an auditable figure manifest
-- a machine-readable runtime that supports Codex subagent stage briefs, run-state tracking, and validation
+![Representative switching OU and Duffing sample paths](docs/figures/switching_sample_paths.png)
+
+Stress-test rank summary:
+
+![Stress-test rank heatmap](docs/figures/stress_rank_heatmap.png)
 
 ## Repository Layout
 
 ```text
-src/                    Python package and CLI implementation
-scripts/                release and preflight helpers
-tests/                  unit and integration tests
-assets/                 manifests and linked artifact metadata
-reports/                generated benchmark/report outputs from the release layer
-writing-pipeline/       bilingual writing workflow and runtime
+src/switching_sde/       Python package and `switching-sde` CLI
+scripts/                 Release, artifact, and preflight helpers
+tests/                   Unit, regression, and integration tests
+assets/manifests/        Artifact and dataset lock metadata
+reports/paper/           Generated paper/release figures and outputs
+writing-pipeline/        Auxiliary authoring workflow used during drafting
+docs/figures/            README figures copied from the paper source archive
 ```
+
+The `writing-pipeline/` directory is retained for provenance and drafting
+support. The primary code interface for readers of the paper is the
+`switching-sde` package under `src/`.
 
 ## Installation
 
 ```bash
+git clone https://github.com/LeeShuaiyu/switching-sde-release.git
+cd switching-sde-release
+
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip setuptools wheel
-pip install -e .
+python -m pip install -e .
 ```
 
-If editable install is unavailable in your environment:
+Check that the CLI is available:
 
 ```bash
-pip install .
+switching-sde --help
 ```
 
-## Release CLI Usage
+## Basic Usage
 
-Set the legacy artifact root first. If `--legacy-root` is omitted, the CLI tries `LEGACY_PENN_ROOT` and then `../PENN`.
-
-```bash
-export LEGACY_PENN_ROOT=/path/to/PENN
-```
-
-Index and link legacy artifacts:
+The CLI exposes artifact, evaluation, visualization, benchmark, and report
+commands:
 
 ```bash
 switching-sde artifacts index --legacy-root "$LEGACY_PENN_ROOT"
 switching-sde artifacts link --legacy-root "$LEGACY_PENN_ROOT"
+
+switching-sde eval --experiment id_linear --mode auto \
+  --legacy-root "$LEGACY_PENN_ROOT"
+
+switching-sde viz --experiment id_nonlinear --mode auto \
+  --legacy-root "$LEGACY_PENN_ROOT"
+
+switching-sde benchmark --suite paper_full --mode frozen \
+  --legacy-root "$LEGACY_PENN_ROOT"
+
+switching-sde report --suite paper_full \
+  --legacy-root "$LEGACY_PENN_ROOT"
 ```
 
-Run benchmark/report generation:
+Supported benchmark suites:
+
+- `paper_full`: standard linear switching OU benchmark;
+- `p5`: linear stress-test suite;
+- `p6`: nonlinear switching Duffing benchmark and stress-test suite.
+
+Supported execution modes:
+
+- `live`: run against available checkpoints and datasets in `LEGACY_PENN_ROOT`;
+- `frozen`: rebuild summaries from existing benchmark artifacts;
+- `auto`: try live execution first and fall back to frozen artifacts.
+
+## Experiments Represented
+
+The release layer tracks the experiment families used in the paper:
+
+- standard switching Ornstein-Uhlenbeck dynamics;
+- nonlinear switching Duffing dynamics;
+- heavy-tailed perturbation settings;
+- weak-separability settings;
+- irregular-observation settings;
+- neural point-regression and segmentation baselines;
+- classical or model-based change-point baselines;
+- CSPM variants with recurrent and self-attention encoders.
+
+The experiment configuration files live in
+`src/switching_sde/config/experiments/`.
+
+## Testing
+
+Run the lightweight unit and regression tests:
 
 ```bash
-switching-sde benchmark --suite paper_full --mode frozen
-switching-sde report --suite paper_full
+python -m unittest discover -s tests/unit -p 'test_*.py'
+python -m unittest discover -s tests/regression -p 'test_*.py'
 ```
 
-Main commands:
-
-- `switching-sde artifacts index --legacy-root <path>`
-- `switching-sde artifacts link --legacy-root <path>`
-- `switching-sde eval --experiment <name> --mode live|frozen|auto`
-- `switching-sde viz --experiment <name> --mode live|frozen|auto`
-- `switching-sde benchmark --suite paper_full|p5|p6 --mode live|frozen|auto`
-- `switching-sde report --suite paper_full|p5|p6`
-
-Execution policy:
-
-- `live`: run compatible evaluation or visualization against available checkpoints and datasets
-- `frozen`: regenerate outputs strictly from existing tracked results
-- `auto`: try `live`, then fall back to `frozen`
-
-## Writing Pipeline Usage
-
-The writing pipeline lives in [`writing-pipeline/README.md`](writing-pipeline/README.md) and [`writing-pipeline/START_HERE.md`](writing-pipeline/START_HERE.md).
-
-### Render current outputs
+Integration tests may require `LEGACY_PENN_ROOT` or may fall back to frozen
+artifacts depending on the local environment:
 
 ```bash
-python3 writing-pipeline/tools/render_outputs.py --config writing-pipeline/run_config.yaml
+python -m unittest discover -s tests/integration -p 'test_*.py'
 ```
 
-This refreshes:
+## Notes on Reproducibility
 
-- `writing-pipeline/outputs/report.html`
-- `writing-pipeline/outputs/report.zh.html`
-- `writing-pipeline/outputs/paper.html`
-- `writing-pipeline/outputs/paper.zh.html`
-- `writing-pipeline/outputs/figure_manifest.md`
+This repository was built as a clean release layer over a larger legacy
+experiment tree. That design has two consequences:
 
-### Initialize an auditable workflow run
+1. The public repository is small enough to clone and inspect.
+2. Exact live reproduction of every table and figure requires the legacy
+   datasets/checkpoints to be present locally.
 
-```bash
-python3 writing-pipeline/tools/run_workflow.py --config writing-pipeline/run_config.yaml init --run-id demo
-```
-
-Inspect runnable stages and generate a stage brief for a Codex subagent:
-
-```bash
-python3 writing-pipeline/tools/run_workflow.py --config writing-pipeline/run_config.yaml next --run-id demo
-python3 writing-pipeline/tools/run_workflow.py --config writing-pipeline/run_config.yaml brief --run-id demo --stage stage_0_repository_intake
-```
-
-Sync the run state against outputs that already exist on disk:
-
-```bash
-python3 writing-pipeline/tools/run_workflow.py --config writing-pipeline/run_config.yaml sync --run-id demo
-```
-
-Validate the run:
-
-```bash
-python3 writing-pipeline/tools/validate_workflow.py --config writing-pipeline/run_config.yaml --run-id demo
-```
-
-The runtime leaves audit files under `writing-pipeline/runs/<run_id>/`:
-
-- `run_state.yaml`
-- `events.jsonl`
-- `briefs/<stage>.md`
-- `validation_report.md`
-
-## Example Outputs
-
-Current final deliverables are stored under `writing-pipeline/outputs/`:
-
-- [`writing-pipeline/outputs/report.md`](writing-pipeline/outputs/report.md)
-- [`writing-pipeline/outputs/report.zh.md`](writing-pipeline/outputs/report.zh.md)
-- [`writing-pipeline/outputs/paper_sections.md`](writing-pipeline/outputs/paper_sections.md)
-- [`writing-pipeline/outputs/paper_sections.zh.md`](writing-pipeline/outputs/paper_sections.zh.md)
-- [`writing-pipeline/outputs/report.html`](writing-pipeline/outputs/report.html)
-- [`writing-pipeline/outputs/report.zh.html`](writing-pipeline/outputs/report.zh.html)
-- [`writing-pipeline/outputs/paper.html`](writing-pipeline/outputs/paper.html)
-- [`writing-pipeline/outputs/paper.zh.html`](writing-pipeline/outputs/paper.zh.html)
-- [`writing-pipeline/outputs/figure_manifest.md`](writing-pipeline/outputs/figure_manifest.md)
-
-## Validation
-
-Package and CLI sanity:
-
-```bash
-PYTHONPATH=src python -m switching_sde.cli.main --help
-PYTHONPATH=src python -m unittest discover -s tests -p 'test_*.py'
-```
-
-Writing workflow validation:
-
-```bash
-python3 writing-pipeline/tools/validate_workflow.py --config writing-pipeline/run_config.yaml --run-id demo
-```
-
-## Release Preparation
-
-Before tagging a release, run preflight:
-
-```bash
-export LEGACY_PENN_ROOT=/path/to/PENN
-python scripts/release_preflight.py --legacy-root "$LEGACY_PENN_ROOT"
-```
-
-This generates:
-
-- `reports/release/preflight_summary.json`
-- `reports/release/preflight_summary.md`
-- `dist/switching_sde_release_lite.tar.gz`
-- `dist/switching_sde_release_full.tar.gz`
-
-Use `RELEASE_CHECKLIST.md` as the final go/no-go gate.
+For readers without the legacy artifact tree, the source code, configuration
+files, checked-in figures, and writing outputs document the released experiment
+structure and paper-facing results. For maintainers with access to the legacy
+tree, the CLI provides a uniform way to index artifacts, run frozen or live
+evaluation, and regenerate reports.
 
 ## License
 
-MIT. See `LICENSE`.
+This repository is released under the MIT License. See [LICENSE](LICENSE).
+
+## Citation
+
+If you use this code, please cite the accompanying manuscript,
+**"Switching-Time Posterior Inference for Regime-Switching Stochastic
+Dynamics"**. Formal BibTeX metadata will be added once the manuscript metadata
+is finalized.
